@@ -158,7 +158,8 @@ abstract class DatabaseMysqlBase extends Database {
 			);
 			$this->platform->setPrefix( $tablePrefix );
 			// Abstract over any excessive MySQL defaults
-			$set = [ 'group_concat_max_len = 262144' ];
+			// $set = [ 'group_concat_max_len = 262144' ];
+			$set = [ ];
 			// Set any custom settings defined by site config
 			// https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html
 			foreach ( $this->connectionVariables as $var => $val ) {
@@ -795,7 +796,8 @@ abstract class DatabaseMysqlBase extends Database {
 	 * @return string|null 32 bit integer ID; null if not applicable or unknown
 	 */
 	public function getTopologyBasedServerId() {
-		return $this->getServerId();
+		return null;
+		// return $this->getServerId();
 	}
 
 	/**
@@ -874,11 +876,12 @@ abstract class DatabaseMysqlBase extends Database {
 
 	public function serverIsReadOnly() {
 		// Avoid SHOW to avoid internal temporary tables
-		$flags = self::QUERY_IGNORE_DBO_TRX | self::QUERY_CHANGE_NONE;
-		$res = $this->query( "SELECT @@GLOBAL.read_only AS Value", __METHOD__, $flags );
-		$row = $res->fetchObject();
+		// $flags = self::QUERY_IGNORE_DBO_TRX | self::QUERY_CHANGE_NONE;
+		// $res = $this->query( "SELECT @@GLOBAL.read_only AS Value", __METHOD__, $flags );
+		// $row = $res->fetchObject();
 
-		return $row ? (bool)$row->Value : false;
+		// return $row ? (bool)$row->Value : false;
+		return false;
 	}
 
 	/**

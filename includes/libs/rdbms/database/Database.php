@@ -239,9 +239,9 @@ abstract class Database implements IDatabase, IMaintainableDatabase, LoggerAware
 		$this->topologicalPrimaryConnRef = $params['topologicalPrimaryConnRef'] ?? null;
 		$this->connectionVariables = $params['variables'] ?? [];
 		// Set SQL mode, default is turning them all off, can be overridden or skipped with null
-		if ( is_string( $params['sqlMode'] ?? null ) ) {
-			$this->connectionVariables['sql_mode'] = $params['sqlMode'];
-		}
+		// if ( is_string( $params['sqlMode'] ?? null ) ) {
+		// 	$this->connectionVariables['sql_mode'] = $params['sqlMode'];
+		// }
 
 		$this->flags = (int)$params['flags'];
 		$this->ssl = $params['ssl'] ?? (bool)( $this->flags & self::DBO_SSL );
