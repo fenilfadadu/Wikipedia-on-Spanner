@@ -123,17 +123,23 @@ class MySQLPlatform extends SQLPlatform {
 		// The precision argument is silently ignored for MySQL < 5.6 and MariaDB < 5.3.
 		// https://dev.mysql.com/doc/refman/5.6/en/date-and-time-functions.html#function_sysdate
 		// https://dev.mysql.com/doc/refman/5.6/en/fractional-seconds.html
-		return "SELECT IF(GET_LOCK($encName,$timeout),UNIX_TIMESTAMP(SYSDATE(6)),NULL) AS acquired";
+
+		// return "SELECT IF(GET_LOCK($encName,$timeout),UNIX_TIMESTAMP(SYSDATE(6)),NULL) AS acquired";
+		return "SELECT UNIX_TIMESTAMP(SYSDATE(6)) AS acquired";
 	}
 
 	public function lockIsFreeSQLText( $lockName ) {
 		$encName = $this->quoter->addQuotes( $this->makeLockName( $lockName ) );
-		return "SELECT IS_FREE_LOCK($encName) AS unlocked";
+
+		// return "SELECT IS_FREE_LOCK($encName) AS unlocked";
+		return "SELECT '1' AS unlocked";
 	}
 
 	public function unlockSQLText( $lockName ) {
 		$encName = $this->quoter->addQuotes( $this->makeLockName( $lockName ) );
-		return "SELECT RELEASE_LOCK($encName) AS released";
+		
+		// return "SELECT RELEASE_LOCK($encName) AS released";
+		return "SELECT '1' AS released";
 	}
 
 	public function makeLockName( $lockName ) {
