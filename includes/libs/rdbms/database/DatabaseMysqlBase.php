@@ -823,14 +823,15 @@ abstract class DatabaseMysqlBase extends Database {
 	protected function getServerUUID() {
 		$fname = __METHOD__;
 		return $this->srvCache->getWithSetCallback(
-			$this->srvCache->makeGlobalKey( 'mysql-server-uuid', $this->getServerName() ),
+			$this->srvCache->makeGlobalKey('mysql-server-uuid', $this->getServerName()),
 			self::SERVER_ID_CACHE_TTL,
-			function () use ( $fname ) {
-				$flags = self::QUERY_IGNORE_DBO_TRX | self::QUERY_CHANGE_NONE;
-				$res = $this->query( "SHOW GLOBAL VARIABLES LIKE 'server_uuid'", $fname, $flags );
-				$row = $res->fetchObject();
-
-				return $row ? $row->Value : null;
+			function () use ($fname) {
+				// $flags = self::QUERY_IGNORE_DBO_TRX | self::QUERY_CHANGE_NONE;
+				// $res = $this->query( "SHOW GLOBAL VARIABLES LIKE 'server_uuid'", $fname, $flags );
+				// $row = $res->fetchObject();
+	
+				// return $row ? $row->Value : null;
+				return null;
 			}
 		);
 	}
@@ -842,18 +843,18 @@ abstract class DatabaseMysqlBase extends Database {
 	protected function getServerGTIDs( $fname = __METHOD__ ) {
 		$map = [];
 
-		$flags = self::QUERY_IGNORE_DBO_TRX | self::QUERY_CHANGE_NONE;
+		// $flags = self::QUERY_IGNORE_DBO_TRX | self::QUERY_CHANGE_NONE;
 
-		// Get global-only variables like gtid_executed
-		$res = $this->query( "SHOW GLOBAL VARIABLES LIKE 'gtid_%'", $fname, $flags );
-		foreach ( $res as $row ) {
-			$map[$row->Variable_name] = $row->Value;
-		}
-		// Get session-specific (e.g. gtid_domain_id since that is were writes will log)
-		$res = $this->query( "SHOW SESSION VARIABLES LIKE 'gtid_%'", $fname, $flags );
-		foreach ( $res as $row ) {
-			$map[$row->Variable_name] = $row->Value;
-		}
+		// // Get global-only variables like gtid_executed
+		// $res = $this->query( "SHOW GLOBAL VARIABLES LIKE 'gtid_%'", $fname, $flags );
+		// foreach ( $res as $row ) {
+		// 	$map[$row->Variable_name] = $row->Value;
+		// }
+		// // Get session-specific (e.g. gtid_domain_id since that is were writes will log)
+		// $res = $this->query( "SHOW SESSION VARIABLES LIKE 'gtid_%'", $fname, $flags );
+		// foreach ( $res as $row ) {
+		// 	$map[$row->Variable_name] = $row->Value;
+		// }
 
 		return $map;
 	}

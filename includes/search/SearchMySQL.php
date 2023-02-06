@@ -445,20 +445,21 @@ class SearchMySQL extends SearchDatabase {
 	 * @return int
 	 */
 	protected function minSearchLength() {
-		if ( self::$mMinSearchLength === null ) {
-			$sql = "SHOW GLOBAL VARIABLES LIKE 'ft\\_min\\_word\\_len'";
+		// if ( self::$mMinSearchLength === null ) {
+		// 	$sql = "SHOW GLOBAL VARIABLES LIKE 'ft\\_min\\_word\\_len'";
 
-			$dbr = $this->lb->getConnectionRef( DB_REPLICA );
-			$result = $dbr->query( $sql, __METHOD__ );
-			$row = $result->fetchObject();
-			$result->free();
+		// 	$dbr = $this->lb->getConnectionRef( DB_REPLICA );
+		// 	$result = $dbr->query( $sql, __METHOD__ );
+		// 	$row = $result->fetchObject();
+		// 	$result->free();
 
-			if ( $row && $row->Variable_name == 'ft_min_word_len' ) {
-				self::$mMinSearchLength = intval( $row->Value );
-			} else {
-				self::$mMinSearchLength = 0;
-			}
-		}
-		return self::$mMinSearchLength;
+		// 	if ( $row && $row->Variable_name == 'ft_min_word_len' ) {
+		// 		self::$mMinSearchLength = intval( $row->Value );
+		// 	} else {
+		// 		self::$mMinSearchLength = 0;
+		// 	}
+		// }
+		// return self::$mMinSearchLength;
+		return 0;
 	}
 }
