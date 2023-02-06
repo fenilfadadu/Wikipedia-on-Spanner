@@ -1,0 +1,134 @@
+Skip to content
+Search or jump to…
+Pull requests
+Issues
+Codespaces
+Marketplace
+Explore
+ 
+@fenilfadadu 
+wikimedia
+/
+mediawiki
+Public
+Fork your own copy of wikimedia/mediawiki
+Code
+Pull requests
+Security
+Insights
+mediawiki/.gitignore
+@jdforrester
+jdforrester Branch commit for REL1_39
+…
+Latest commit 61a9161 on Sep 6, 2022
+ History
+ 34 contributors
+@Krinkle@kostajh@hashar@kizule@reedy@MatmaRex@jgonera@amire80@arlolra@Volker-E@tstarling@scfc
+91 lines (83 sloc)  1.21 KB
+
+# Repository management
+.svn
+
+# git-deploy status file:
+/.deploy
+
+# Editors
+*.kate-swp
+*~
+\#*#
+.#*
+.*.swp
+.project
+cscope.files
+cscope.out
+*.orig
+## NetBeans
+nbproject*
+project.index
+## Sublime
+sublime-*
+sftp-config.json
+## Visual Studio Code
+*.vscode/
+
+# MediaWiki install & usage
+/cache
+/docs/coverage
+/docs/js
+/docs/latex
+/images/[0-9a-f]
+/images/archive
+/images/cache
+/images/deleted
+/images/lockdir
+/images/temp
+/images/thumb
+## Extension:EasyTimeline
+/images/timeline
+## Extension:Score
+/images/lilypond
+## Extension:TimedMediaHandler
+/images/transcoded
+/images/tmp
+/maintenance/.mweval_history
+/maintenance/.mwsql_history
+/maintenance/dev/data
+/LocalSettings.php
+/includes/PlatformSettings.php
+
+# Building & testing
+npm-debug.log
+node_modules/
+/resources/lib/.foreign
+/tests/phpunit/phpunit.phar
+.phpunit.result.cache
+/tests/phpunit/.phpunit.result.cache
+phpunit.xml
+/tests/selenium/log
+.eslintcache
+.api-testing.config.json
+.phan/local-config.php
+
+# Composer
+/composer.lock
+/composer.local.json
+/composer.phar
+
+# Operating systems
+## Mac OS X
+.DS_Store
+## Windows
+Thumbs.db
+
+# Misc
+.buildpath
+.classpath
+.idea
+*.iml
+.metadata*
+.settings
+/favicon.ico
+/static*
+/tags
+/.htaccess
+/.htpasswd
+*.rej
+
+# Docker
+docker-compose.override.yml
+.env
+Footer
+© 2023 GitHub, Inc.
+Footer navigation
+Terms
+Privacy
+Security
+Status
+Docs
+Contact GitHub
+Pricing
+API
+Training
+Blog
+About
+mediawiki/.gitignore at REL1_39 · wikimedia/mediawiki
