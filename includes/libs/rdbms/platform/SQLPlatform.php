@@ -355,9 +355,8 @@ class SQLPlatform implements ISQLPlatform {
 		}
 		// This version works in MySQL and SQLite. It will very likely need to be
 		// overridden for most other RDBMS subclasses.
-		return "$sql LIMIT "
-			. ( ( is_numeric( $offset ) && $offset != 0 ) ? "{$offset}," : "" )
-			. "{$limit} ";
+		return "$sql LIMIT {$limit} "
+			. ( ( is_numeric( $offset ) && $offset != 0 ) ? "OFFSET {$offset} " : "" );
 	}
 
 	/**
@@ -845,7 +844,7 @@ class SQLPlatform implements ISQLPlatform {
 				if ( isset( $use_index[$alias] ) ) { // has USE INDEX?
 					$use = $this->useIndexClause( implode( ',', (array)$use_index[$alias] ) );
 					if ( $use != '' ) {
-						$tableClause .= ' ' . $use;
+						$tableClause .= '@' . $use;
 					}
 				}
 				if ( isset( $ignore_index[$alias] ) ) { // has IGNORE INDEX?
@@ -864,7 +863,7 @@ class SQLPlatform implements ISQLPlatform {
 			} elseif ( isset( $use_index[$alias] ) ) {
 				// Is there an INDEX clause for this table?
 				$tableClause = $joinedTable;
-				$tableClause .= ' ' . $this->useIndexClause(
+				$tableClause .= '@' . $this->useIndexClause(
 						implode( ',', (array)$use_index[$alias] )
 					);
 
@@ -1337,7 +1336,7 @@ class SQLPlatform implements ISQLPlatform {
 	public function buildGroupConcatField(
 		$delim, $table, $field, $conds = '', $join_conds = []
 	) {
-		$fld = "GROUP_CONCAT($field SEPARATOR " . $this->quoter->addQuotes( $delim ) . ')';
+		$fld = "STRING_AGG($field, " . $this->quoter->addQuotes( $delim ) . ')';
 
 		return '(' . $this->selectSQLText( $table, $fld, $conds, __METHOD__, [], $join_conds ) . ')';
 	}

@@ -305,7 +305,9 @@ class ManualLogEntry extends LogEntryBase implements Taggable {
 			$relations['associated_rev_id'] = $revId;
 		}
 
+		$log_id = intval(microtime(true));
 		$data = [
+			'log_id'   => $log_id,
 			'log_type' => $this->getType(),
 			'log_action' => $this->getSubtype(),
 			'log_timestamp' => $dbw->timestamp( $this->getTimestamp() ),
@@ -314,6 +316,7 @@ class ManualLogEntry extends LogEntryBase implements Taggable {
 			'log_title' => $this->getTarget()->getDBkey(),
 			'log_page' => $this->getTarget()->getArticleID(),
 			'log_params' => LogEntryBase::makeParamBlob( $params ),
+			'log_deleted' => 0,
 		];
 		if ( isset( $this->deleted ) ) {
 			$data['log_deleted'] = $this->deleted;
@@ -321,7 +324,8 @@ class ManualLogEntry extends LogEntryBase implements Taggable {
 		$data += CommentStore::getStore()->insert( $dbw, 'log_comment', $comment );
 
 		$dbw->insert( 'logging', $data, __METHOD__ );
-		$this->id = $dbw->insertId();
+		// $this->id = $dbw->insertId();
+		$this->id = $log_id;
 
 		$rows = [];
 		foreach ( $relations as $tag => $values ) {
@@ -336,7 +340,7 @@ class ManualLogEntry extends LogEntryBase implements Taggable {
 			foreach ( $values as $value ) {
 				$rows[] = [
 					'ls_field' => $tag,
-					'ls_value' => $value,
+					'ls_value' => $dbw->addQuotes($value),
 					'ls_log_id' => $this->id
 				];
 			}

@@ -377,7 +377,6 @@ class ActorStore implements UserIdentityLookup, ActorNormalization {
 		}
 		// to cache row
 		$this->newActorFromRow( $row );
-
 		return (int)$row->actor_id;
 	}
 
@@ -406,9 +405,11 @@ class ActorStore implements UserIdentityLookup, ActorNormalization {
 			return $existingActorId;
 		}
 
+		$newActorId = intval(microtime(true));
 		$dbw->insert(
 			'actor',
 			[
+				'actor_id'   => $newActorId,
 				'actor_user' => $userId,
 				'actor_name' => $userName,
 			],
@@ -417,14 +418,14 @@ class ActorStore implements UserIdentityLookup, ActorNormalization {
 		);
 
 		if ( $dbw->affectedRows() ) {
-			$actorId = $dbw->insertId();
+			$actorId = $newActorId;
 		} else {
 			// Outdated cache?
 			// Use LOCK IN SHARE MODE to bypass any MySQL REPEATABLE-READ snapshot.
 			$actorId = $this->findActorIdInternal(
 				$userName,
 				$dbw,
-				[ 'LOCK IN SHARE MODE' ]
+				[ ]
 			);
 			if ( !$actorId ) {
 				throw new CannotCreateActorException(
@@ -459,10 +460,12 @@ class ActorStore implements UserIdentityLookup, ActorNormalization {
 		$this->checkDatabaseDomain( $dbw );
 		[ $userId, $userName ] = $this->validateActorForInsertion( $user );
 
+		$newActorId = intval(microtime(true));
 		try {
 			$dbw->insert(
 				'actor',
 				[
+					'actor_id' => $newActorId,
 					'actor_user' => $userId,
 					'actor_name' => $userName,
 				],
@@ -472,7 +475,7 @@ class ActorStore implements UserIdentityLookup, ActorNormalization {
 			// We rely on the database to crash on unique actor_name constraint.
 			throw new CannotCreateActorException( $e->getMessage() );
 		}
-		$actorId = $dbw->insertId();
+		$actorId = $newActorId;
 
 		$this->attachActorId( $user, $actorId, true );
 		// Cache row we've just created
@@ -536,7 +539,9 @@ class ActorStore implements UserIdentityLookup, ActorNormalization {
 				"actor_id=$existingActorId, new user_id=$userId"
 			);
 		}
-		$actorId = $dbw->insertId() ?: $existingActorId;
+		// $actorId = $dbw->insertId() ?: $existingActorId;
+		$actorId = (int)$dbw->selectField( 'actor', 'actor_id',
+			[ 'actor_name' => $userName, 'actor_user' => $userId ], __METHOD__ );
 
 		$this->cache->remove( $user );
 		$this->attachActorId( $user, $actorId, true );

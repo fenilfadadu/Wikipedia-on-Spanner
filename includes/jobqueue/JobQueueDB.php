@@ -180,7 +180,7 @@ class JobQueueDB extends JobQueue {
 				[
 					'job_cmd' => $this->type,
 					"job_token != {$dbr->addQuotes( '' )}",
-					"job_attempts >= " . $dbr->addQuotes( $this->maxTries )
+					"job_attempts >= " . $this->maxTries 
 				],
 				__METHOD__
 			);
@@ -397,7 +397,7 @@ class JobQueueDB extends JobQueue {
 					'job_token' => $uuid,
 					'job_token_timestamp' => $dbw->timestamp(),
 					'job_attempts = job_attempts+1' ],
-				[ 'job_cmd' => $this->type, 'job_id' => $row->job_id, 'job_token' => '' ],
+				[ 'job_cmd' => $this->type, 'job_id' => (int)$row->job_id, 'job_token' => '' ],
 				__METHOD__
 			);
 			// This might get raced out by another runner when claiming the previously
@@ -431,7 +431,7 @@ class JobQueueDB extends JobQueue {
 				$dbw->query( "UPDATE {$dbw->tableName( 'job' )} " .
 					"SET " .
 						"job_token = {$dbw->addQuotes( $uuid ) }, " .
-						"job_token_timestamp = {$dbw->addQuotes( $dbw->timestamp() )}, " .
+					"job_token_timestamp = {$dbw->addQuotes( $dbw->timestamp() )}, " .
 						"job_attempts = job_attempts+1 " .
 					"WHERE ( " .
 						"job_cmd = {$dbw->addQuotes( $this->type )} " .
@@ -492,7 +492,7 @@ class JobQueueDB extends JobQueue {
 			// Delete a row with a single DELETE without holding row locks over RTTs...
 			$dbw->delete(
 				'job',
-				[ 'job_cmd' => $this->type, 'job_id' => $id ],
+				[ 'job_cmd' => $this->type, 'job_id' => (int)$id ],
 				__METHOD__
 			);
 
@@ -690,12 +690,12 @@ class JobQueueDB extends JobQueue {
 						'job_cmd' => $this->type,
 						"job_token != {$dbw->addQuotes( '' )}", // was acquired
 						"job_token_timestamp < {$dbw->addQuotes( $claimCutoff )}", // stale
-						"job_attempts < {$dbw->addQuotes( $this->maxTries )}" ], // retries left
+						"job_attempts < $this->maxTries" ], // retries left
 					__METHOD__
 				);
 				$ids = array_map(
 					static function ( $o ) {
-						return $o->job_id;
+						return (int)$o->job_id;
 					}, iterator_to_array( $res )
 				);
 				if ( count( $ids ) ) {
@@ -724,14 +724,14 @@ class JobQueueDB extends JobQueue {
 				"job_token_timestamp < {$dbw->addQuotes( $pruneCutoff )}" // stale
 			];
 			if ( $this->claimTTL > 0 ) { // only prune jobs attempted too many times...
-				$conds[] = "job_attempts >= {$dbw->addQuotes( $this->maxTries )}";
+				$conds[] = "job_attempts >= $this->maxTries";
 			}
 			// Get the IDs of jobs that are considered stale and should be removed. Selecting
 			// the IDs first means that the UPDATE can be done by primary key (less deadlocks).
 			$res = $dbw->select( 'job', 'job_id', $conds, __METHOD__ );
 			$ids = array_map(
 				static function ( $o ) {
-					return $o->job_id;
+					return (int)$o->job_id;
 				}, iterator_to_array( $res )
 			);
 			if ( count( $ids ) ) {
@@ -757,6 +757,7 @@ class JobQueueDB extends JobQueue {
 	protected function insertFields( IJobSpecification $job, IDatabase $db ) {
 		return [
 			// Fields that describe the nature of the job
+			'job_id' => time() * 1000 + rand(0, 999),
 			'job_cmd' => $job->getType(),
 			'job_namespace' => $job->getParams()['namespace'] ?? NS_SPECIAL,
 			'job_title' => $job->getParams()['title'] ?? '',
@@ -767,6 +768,8 @@ class JobQueueDB extends JobQueue {
 				sha1( serialize( $job->getDeduplicationInfo() ) ),
 				16, 36, 31
 			),
+			'job_attempts' => 0,
+			'job_token' => '00000000000000000000000000000000',
 			'job_random' => mt_rand( 0, self::MAX_JOB_RANDOM )
 		];
 	}

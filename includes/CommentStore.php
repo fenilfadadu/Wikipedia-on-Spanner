@@ -475,17 +475,21 @@ class CommentStore {
 				__METHOD__
 			);
 			if ( !$commentId ) {
+				$commentId = intval(microtime(true));
 				$dbw->insert(
 					'comment',
 					[
+						'comment_id'   => $commentId,
 						'comment_hash' => $hash,
 						'comment_text' => $comment->text,
 						'comment_data' => $dbData,
 					],
 					__METHOD__
 				);
-				$commentId = $dbw->insertId();
+
+				// $commentId = $dbw->insertId();
 			}
+
 			$comment->id = (int)$commentId;
 		}
 
@@ -532,7 +536,7 @@ class CommentStore {
 				};
 			}
 			if ( $tempTableStage & SCHEMA_COMPAT_WRITE_NEW ) {
-				$fields["{$key}_id"] = $comment->id;
+				$fields["{$key}_id"] = (int)$comment->id;
 			}
 		}
 

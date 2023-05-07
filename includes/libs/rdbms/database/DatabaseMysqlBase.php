@@ -1069,7 +1069,10 @@ abstract class DatabaseMysqlBase extends Database {
 			"($sqlColumns) VALUES $sqlTuples " .
 			"ON DUPLICATE KEY UPDATE $sqlColumnAssignments";
 
+		// $startTime = microtime(true);
 		$this->query( $sql, $fname, self::QUERY_CHANGE_ROWS );
+		// $elapsedTime = strval((microtime(true) - $startTime) * 1000);
+		// fwrite($this->latencyFile, "UPSERT, $elapsedTime\n");
 	}
 
 	protected function doReplace( $table, array $identityKey, array $rows, $fname ) {
@@ -1078,7 +1081,10 @@ abstract class DatabaseMysqlBase extends Database {
 
 		$sql = "REPLACE INTO $encTable ($sqlColumns) VALUES $sqlTuples";
 
+		// $startTime = microtime(true);
 		$this->query( $sql, $fname, self::QUERY_CHANGE_ROWS );
+		// $elapsedTime = strval((microtime(true) - $startTime) * 1000);
+		// fwrite($this->latencyFile, "REPLACE, $elapsedTime\n");
 	}
 
 	/**

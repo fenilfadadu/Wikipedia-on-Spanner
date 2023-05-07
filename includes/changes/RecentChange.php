@@ -457,13 +457,13 @@ class RecentChange implements Taggable {
 
 		# Don't reuse an existing rc_id for the new row, if one happens to be
 		# set for some reason.
-		unset( $row['rc_id'] );
+		// unset( $row['rc_id'] );
 
 		# Insert new row
 		$dbw->insert( 'recentchanges', $row, __METHOD__ );
 
 		# Set the ID
-		$this->mAttribs['rc_id'] = $dbw->insertId();
+		// $this->mAttribs['rc_id'] = $dbw->insertId();
 
 		# Notify extensions
 		Hooks::runner()->onRecentChange_save( $this );
@@ -741,6 +741,7 @@ class RecentChange implements Taggable {
 		$rc->mPage = $page;
 		$rc->mPerformer = $user;
 		$rc->mAttribs = [
+			'rc_id' => intval(microtime(true)),
 			'rc_timestamp' => $timestamp,
 			'rc_namespace' => $page->getNamespace(),
 			'rc_title' => $page->getDBkey(),
@@ -822,6 +823,7 @@ class RecentChange implements Taggable {
 		$rc->mPage = $page;
 		$rc->mPerformer = $user;
 		$rc->mAttribs = [
+			'rc_id' => intval(microtime(true)),
 			'rc_timestamp' => $timestamp,
 			'rc_namespace' => $page->getNamespace(),
 			'rc_title' => $page->getDBkey(),
@@ -969,6 +971,7 @@ class RecentChange implements Taggable {
 		$rc->mPage = $target;
 		$rc->mPerformer = $user;
 		$rc->mAttribs = [
+			'rc_id' => intval(microtime(true)),
 			'rc_timestamp' => $timestamp,
 			'rc_namespace' => $target->getNamespace(),
 			'rc_title' => $target->getDBkey(),

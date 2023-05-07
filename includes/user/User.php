@@ -1313,7 +1313,7 @@ class User implements Authority, UserIdentity, UserEmailContact {
 	protected function makeUpdateConditions( IDatabase $db, array $conditions ) {
 		if ( $this->mTouched ) {
 			// CAS check: only update if the row wasn't changed since it was loaded.
-			$conditions['user_touched'] = $db->timestamp( $this->mTouched );
+			$conditions['user_touched'] = intval($db->timestamp( $this->mTouched ));
 		}
 
 		return $conditions;
@@ -1341,7 +1341,7 @@ class User implements Authority, UserIdentity, UserEmailContact {
 
 		$dbw = wfGetDB( DB_PRIMARY );
 		$dbw->update( 'user',
-			[ 'user_touched' => $dbw->timestamp( $newTouched ) ],
+			[ 'user_touched' => intval($dbw->timestamp( $newTouched )) ],
 			$this->makeUpdateConditions( $dbw, [
 				'user_id' => $this->mId,
 			] ),
@@ -2579,10 +2579,10 @@ class User implements Authority, UserIdentity, UserEmailContact {
 					'user_real_name' => $this->mRealName,
 					'user_email' => $this->mEmail,
 					'user_email_authenticated' => $dbw->timestampOrNull( $this->mEmailAuthenticated ),
-					'user_touched' => $dbw->timestamp( $newTouched ),
+					'user_touched' => intval($dbw->timestamp( $newTouched )),
 					'user_token' => strval( $this->mToken ),
 					'user_email_token' => $this->mEmailToken,
-					'user_email_token_expires' => $dbw->timestampOrNull( $this->mEmailTokenExpires ),
+					'user_email_token_expires' => intval($dbw->timestampOrNull( $this->mEmailTokenExpires )),
 				], $this->makeUpdateConditions( $dbw, [ /* WHERE */
 					'user_id' => $this->mId,
 				] ), $fname
@@ -2690,6 +2690,7 @@ class User implements Authority, UserIdentity, UserEmailContact {
 		$noPass = PasswordFactory::newInvalidPassword()->toString();
 
 		$fields = [
+			'user_id' => intval(microtime(true)),
 			'user_name' => $name,
 			'user_password' => $noPass,
 			'user_newpassword' => $noPass,
@@ -2697,9 +2698,9 @@ class User implements Authority, UserIdentity, UserEmailContact {
 			'user_email_authenticated' => $dbw->timestampOrNull( $user->mEmailAuthenticated ),
 			'user_real_name' => $user->mRealName,
 			'user_token' => strval( $user->mToken ),
-			'user_registration' => $dbw->timestamp( $user->mRegistration ),
+			'user_registration' => intval($dbw->timestamp( $user->mRegistration )),
 			'user_editcount' => 0,
-			'user_touched' => $dbw->timestamp( $user->newTouchedTimestamp() ),
+			'user_touched' => intval($dbw->timestamp( $user->newTouchedTimestamp() )),
 		];
 		foreach ( $params as $name => $value ) {
 			$fields["user_$name"] = $value;
@@ -2708,7 +2709,7 @@ class User implements Authority, UserIdentity, UserEmailContact {
 		return $dbw->doAtomicSection( __METHOD__, function ( IDatabase $dbw, $fname ) use ( $fields, $insertActor ) {
 			$dbw->insert( 'user', $fields, $fname, [ 'IGNORE' ] );
 			if ( $dbw->affectedRows() ) {
-				$newUser = self::newFromId( $dbw->insertId() );
+				$newUser = self::newFromId( $fields['user_id'] );
 				$newUser->mName = $fields['user_name'];
 				// Don't pass $this, since calling ::getId, ::getName might force ::load
 				// and this user might not be ready for the yet.
@@ -2760,11 +2761,13 @@ class User implements Authority, UserIdentity, UserEmailContact {
 
 		$this->mTouched = $this->newTouchedTimestamp();
 
-		$dbw = wfGetDB( DB_PRIMARY );
+		$dbw = wfGetDB( DB_PRIMARY );		
 		$status = $dbw->doAtomicSection( __METHOD__, function ( IDatabase $dbw, $fname ) {
+			$newUserId = intval(microtime(true));
 			$noPass = PasswordFactory::newInvalidPassword()->toString();
 			$dbw->insert( 'user',
 				[
+					'user_id' => $newUserId,
 					'user_name' => $this->mName,
 					'user_password' => $noPass,
 					'user_newpassword' => $noPass,
@@ -2772,9 +2775,9 @@ class User implements Authority, UserIdentity, UserEmailContact {
 					'user_email_authenticated' => $dbw->timestampOrNull( $this->mEmailAuthenticated ),
 					'user_real_name' => $this->mRealName,
 					'user_token' => strval( $this->mToken ),
-					'user_registration' => $dbw->timestamp( $this->mRegistration ),
+					'user_registration' => intval($dbw->timestamp( $this->mRegistration )),
 					'user_editcount' => 0,
-					'user_touched' => $dbw->timestamp( $this->mTouched ),
+					'user_touched' => intval($dbw->timestamp( $this->mTouched )),
 				], $fname,
 				[ 'IGNORE' ]
 			);
@@ -2797,7 +2800,7 @@ class User implements Authority, UserIdentity, UserEmailContact {
 				}
 				return Status::newFatal( 'userexists' );
 			}
-			$this->mId = $dbw->insertId();
+			$this->mId = $newUserId;
 
 			// Don't pass $this, since calling ::getId, ::getName might force ::load
 			// and this user might not be ready for the yet.

@@ -64,8 +64,9 @@ class DBAccessObjectUtils implements IDBAccessObject {
 		$lockingOptions = [];
 		if ( self::hasFlags( $bitfield, self::READ_EXCLUSIVE ) ) {
 			$lockingOptions[] = 'FOR UPDATE';
-		} elseif ( self::hasFlags( $bitfield, self::READ_LOCKING ) ) {
-			$lockingOptions[] = 'LOCK IN SHARE MODE';
+			// disabling for user account creation
+		// } elseif ( self::hasFlags( $bitfield, self::READ_LOCKING ) ) {
+		// 	$lockingOptions[] = 'LOCK IN SHARE MODE';
 		}
 
 		if ( $fallbackIndex !== null ) {

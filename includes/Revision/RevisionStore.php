@@ -786,7 +786,8 @@ class RevisionStore
 				'rev_user',
 				$rev->getUser( RevisionRecord::RAW )
 			);
-		$revisionRow += $actorFields;
+		// $revisionRow += $actorFields;
+		$revisionRow['rev_actor'] = $actorFields['rev_actor'];
 
 		$dbw->insert( 'revision', $revisionRow, __METHOD__ );
 
@@ -886,7 +887,10 @@ class RevisionStore
 	) {
 		// Record the edit in revisions
 		$revisionRow = [
+			'rev_id'         => intval(microtime(true)),
 			'rev_page'       => $rev->getPageId( $this->wikiId ),
+			'rev_comment_id' => 0,
+			'rev_actor'      => 0,
 			'rev_parent_id'  => $parentId,
 			'rev_minor_edit' => $rev->isMinor() ? 1 : 0,
 			'rev_timestamp'  => $dbw->timestamp( $rev->getTimestamp() ),
@@ -964,14 +968,16 @@ class RevisionStore
 	 * @return int content row ID
 	 */
 	private function insertContentRowOn( SlotRecord $slot, IDatabase $dbw, $blobAddress ) {
+		$contendId = intval(microtime(true));
 		$contentRow = [
+			'content_id' => $contendId,
 			'content_size' => $slot->getSize(),
 			'content_sha1' => $slot->getSha1(),
 			'content_model' => $this->contentModelStore->acquireId( $slot->getModel() ),
 			'content_address' => $blobAddress,
 		];
 		$dbw->insert( 'content', $contentRow, __METHOD__ );
-		return intval( $dbw->insertId() );
+		return intval( $contendId );
 	}
 
 	/**
@@ -2708,7 +2714,7 @@ class RevisionStore
 			__METHOD__,
 			[
 				'ORDER BY' => [ "rev_timestamp $sort", "rev_id $sort" ],
-				'IGNORE INDEX' => 'rev_timestamp', // Probably needed for T159319
+				// 'IGNORE INDEX' => 'rev_timestamp', // Probably needed for T159319
 			]
 		);
 

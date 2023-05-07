@@ -64,7 +64,7 @@ class LCStoreDB implements LCStore {
 			[ 'lc_lang' => $code, 'lc_key' => $key ],
 			__METHOD__
 		);
-
+	
 		return ( $value !== false ) ? unserialize( $db->decodeBlob( $value ) ) : null;
 	}
 

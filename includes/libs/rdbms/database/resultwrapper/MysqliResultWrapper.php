@@ -35,10 +35,11 @@ class MysqliResultWrapper extends ResultWrapper {
 		// Only check for CR_SERVER_LOST and CR_UNKNOWN_ERROR, as
 		// these are the only errors mysql_fetch_array can cause.
 		// See https://dev.mysql.com/doc/refman/5.7/en/mysql-fetch-row.html.
-		if ( $errno == 2000 || $errno == 2013 ) {
+		if ( $errno == 2000 || $errno == 2013 || $errno == 2027) {
 			throw new DBUnexpectedError(
 				$this->db,
-				'Error in fetchRow(): ' . htmlspecialchars( $this->db->lastError() )
+				'Error in fetchRow(): ' . $this->db->lastError() .
+				$errno
 			);
 		}
 	}

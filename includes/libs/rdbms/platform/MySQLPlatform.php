@@ -47,7 +47,7 @@ class MySQLPlatform extends SQLPlatform {
 	}
 
 	public function buildStringCast( $field ) {
-		return "CAST( $field AS BINARY )";
+		return "CAST( $field AS string )";
 	}
 
 	/**
@@ -55,14 +55,14 @@ class MySQLPlatform extends SQLPlatform {
 	 * @return string
 	 */
 	public function buildIntegerCast( $field ) {
-		return 'CAST( ' . $field . ' AS SIGNED )';
+		return 'CAST(CAST( ' . $field . ' AS STRING ) AS INT64)';
 	}
 
 	protected function normalizeJoinType( string $joinType ) {
 		switch ( strtoupper( $joinType ) ) {
 			case 'STRAIGHT_JOIN':
 			case 'STRAIGHT JOIN':
-				return 'STRAIGHT_JOIN';
+				return 'JOIN';
 
 			default:
 				return parent::normalizeJoinType( $joinType );
@@ -74,7 +74,7 @@ class MySQLPlatform extends SQLPlatform {
 	 * @return string
 	 */
 	public function useIndexClause( $index ) {
-		return "FORCE INDEX (" . $this->indexName( $index ) . ")";
+		return "{FORCE_INDEX=" . $this->indexName( $index ) . "}";
 	}
 
 	/**
@@ -125,7 +125,8 @@ class MySQLPlatform extends SQLPlatform {
 		// https://dev.mysql.com/doc/refman/5.6/en/fractional-seconds.html
 
 		// return "SELECT IF(GET_LOCK($encName,$timeout),UNIX_TIMESTAMP(SYSDATE(6)),NULL) AS acquired";
-		return "SELECT UNIX_TIMESTAMP(SYSDATE(6)) AS acquired";
+		// return "SELECT UNIX_TIMESTAMP(SYSDATE(6)) AS acquired";
+		return "SELECT UNIX_SECONDS(CURRENT_TIMESTAMP()) AS acquired";
 	}
 
 	public function lockIsFreeSQLText( $lockName ) {

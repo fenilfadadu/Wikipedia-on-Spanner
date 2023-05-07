@@ -49,6 +49,10 @@ class SearchMySQL extends SearchDatabase {
 		$lc = $this->legalSearchChars( self::CHARS_NO_SYNTAX ); // Minus syntax chars (" and *)
 		$searchon = '';
 		$this->searchTerms = [];
+		$field = $this->getIndexField( $fulltext );
+		$likeClause = '';
+		$orderByClause = '';
+		$first = true;
 
 		# @todo FIXME: This doesn't handle parenthetical expressions.
 		$m = [];
@@ -111,8 +115,19 @@ class SearchMySQL extends SearchDatabase {
 						// added spaces between them to make word breaks.
 						$stripped = '"' . trim( $stripped ) . '"';
 					}
-					$searchon .= "$quote$stripped$quote$wildcard ";
+ 					$searchon .= "$quote$stripped$quote$wildcard ";
+					
+					if (!$first) {
+						$orderByClause .= ",";
+						$likeClause .= "_";
+					}
+					$first = false;
+					$likeClause .= $stripped;
+					$orderByClause .= "array_length(regexp_extract_all($field, '$stripped'))";
+					
 				}
+				// $likeClause .= "%";
+				
 				if ( count( $strippedVariants ) > 1 ) {
 					$searchon .= ')';
 				}
@@ -122,6 +137,10 @@ class SearchMySQL extends SearchDatabase {
 				$regexp = $this->regexTerm( $term, $wildcard );
 				$this->searchTerms[] = $regexp;
 			}
+			$likeClause = "( $likeClause )";
+			$orderByClause = "(select min(x) from unnest([$orderByClause]) as x)";
+			// echo "order byte clause " . $orderByClause;
+			// echo "Would search with ' .$searchon'";
 			wfDebug( __METHOD__ . ": Would search with '$searchon'" );
 			wfDebug( __METHOD__ . ': Match with /' . implode( '|', $this->searchTerms ) . "/" );
 		} else {
@@ -130,10 +149,12 @@ class SearchMySQL extends SearchDatabase {
 
 		$dbr = $this->lb->getConnectionRef( DB_REPLICA );
 		$searchon = $dbr->addQuotes( $searchon );
-		$field = $this->getIndexField( $fulltext );
+		// $field = $this->getIndexField( $fulltext );
 		return [
-			" MATCH($field) AGAINST($searchon IN BOOLEAN MODE) ",
-			" MATCH($field) AGAINST($searchon IN NATURAL LANGUAGE MODE) DESC "
+			"LOWER($field) LIKE '$likeClause'",
+			$orderByClause
+			// " MATCH($field) AGAINST($searchon IN BOOLEAN MODE) ",
+			// " MATCH($field) AGAINST($searchon IN NATURAL LANGUAGE MODE) DESC "
 		];
 	}
 

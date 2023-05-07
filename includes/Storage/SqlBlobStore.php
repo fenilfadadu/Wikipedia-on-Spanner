@@ -229,14 +229,17 @@ class SqlBlobStore implements IDBAccessObject, BlobStore {
 			}
 
 			$dbw = $this->getDBConnection( DB_PRIMARY );
+			$textId = intval(microtime(true));
 
 			$dbw->insert(
 				'text',
-				[ 'old_text' => $data, 'old_flags' => $flags ],
+				[ 'old_id' => $textId,
+				  'old_text' => "FROM_BASE64('" . base64_encode($data) . "')", 
+				  'old_flags' => $flags ],
 				__METHOD__
 			);
 
-			$textId = $dbw->insertId();
+			// $textId = $dbw->insertId();
 
 			return self::makeAddressFromTextId( $textId );
 		} catch ( MWException $e ) {

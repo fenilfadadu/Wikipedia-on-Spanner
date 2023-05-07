@@ -1381,15 +1381,18 @@ class WikiPage implements Page, IDBAccessObject, PageRecord {
 	 *   page ID is already in use.
 	 */
 	public function insertOn( $dbw, $pageId = null ) {
-		$pageIdForInsert = $pageId ? [ 'page_id' => $pageId ] : [];
+		$insertPageId = $pageId ? $pageId : intval(microtime(true));
+		echo "page id : " . $insertPageId . "\n";
+		$pageIdForInsert = [ 'page_id' => $insertPageId ];
 		$dbw->insert(
 			'page',
 			[
+				'page_id'           => $insertPageId,
 				'page_namespace'    => $this->mTitle->getNamespace(),
 				'page_title'        => $this->mTitle->getDBkey(),
 				'page_is_redirect'  => 0, // Will set this shortly...
 				'page_is_new'       => 1,
-				'page_random'       => wfRandom(),
+				'page_random'       => "CAST(" . wfRandom() . " AS FLOAT64)",
 				'page_touched'      => $dbw->timestamp(),
 				'page_latest'       => 0, // Fill this in shortly...
 				'page_len'          => 0, // Fill this in shortly...
@@ -1399,11 +1402,11 @@ class WikiPage implements Page, IDBAccessObject, PageRecord {
 		);
 
 		if ( $dbw->affectedRows() > 0 ) {
-			$newid = $pageId ? (int)$pageId : $dbw->insertId();
-			$this->mId = $newid;
-			$this->mTitle->resetArticleID( $newid );
+			// $newid = $pageId ? (int)$pageId : $dbw->insertId();
+			$this->mId = $insertPageId;
+			$this->mTitle->resetArticleID( $insertPageId );
 
-			return $newid;
+			return $insertPageId;
 		} else {
 			return false; // nothing changed
 		}

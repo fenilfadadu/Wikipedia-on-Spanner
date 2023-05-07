@@ -1016,13 +1016,26 @@ class SqlBagOStuff extends MediumSpecificBagOStuff {
 		foreach ( $argsByKey as $key => list( $step, $init, $exptime ) ) {
 			$mt = $this->makeTimestampedModificationToken( $mtime, $db );
 			$expiry = $this->makeNewKeyExpiry( $exptime, (int)$mtime );
-			$db->upsert(
-				$ptable,
-				$this->buildUpsertRow( $db, $key, $init, $expiry, $mt ),
-				[ [ 'keyname' ] ],
-				$this->buildIncrUpsertSet( $db, $step, $init, $expiry, $mt, (int)$mtime ),
-				__METHOD__
-			);
+			$res = $db->newSelectQueryBuilder()
+					->select( [ 'keyname' ] )
+					->from( $ptable )
+					->where('keyname = ' . $db->addQuotes($key))
+					->limit( 1 )
+					->caller( __METHOD__ )
+					->fetchResultSet();
+			if ($res->numRows()) {
+				$db->update($ptable, $this->buildIncrUpsertSet( $db, $step, $init, $expiry, $mt, (int)$mtime ), [
+					'keyname' => $key]);
+			} else {
+				$db->insert($ptable, $this->buildUpsertRow($db, $key, $init, $expiry, $mt), __METHOD__);
+			}
+			// $db->upsert(
+			// 	$ptable,
+			// 	$this->buildUpsertRow( $db, $key, $init, $expiry, $mt ),
+			// 	[ [ 'keyname' ] ],
+			// 	$this->buildIncrUpsertSet( $db, $step, $init, $expiry, $mt, (int)$mtime ),
+			// 	__METHOD__
+			// );
 			if ( !$db->affectedRows() ) {
 				$this->logger->warning( __METHOD__ . ": failed to set new $key value" );
 			} else {
@@ -1235,8 +1248,8 @@ class SqlBagOStuff extends MediumSpecificBagOStuff {
 		// Map of (column => (SQL for non-expired key rows, SQL for expired key rows))
 		$expressionsByColumn = [
 			'value'   => [
-				$db->buildIntegerCast( 'value' ) . " + {$db->addQuotes( $step )}",
-				$db->addQuotes( $this->dbEncodeSerialValue( $db, $init ) )
+				$db->buildIntegerCast( 'value' ) . " + {$step}",
+				" CAST (" . $db->addQuotes( $this->dbEncodeSerialValue( $db, $init ) ) . ") AS BYTES"
 			],
 			'exptime' => [
 				'exptime',
@@ -1290,7 +1303,7 @@ class SqlBagOStuff extends MediumSpecificBagOStuff {
 	 * @return string
 	 */
 	private function dbEncodeSerialValue( IDatabase $db, $serialValue ) {
-		return is_int( $serialValue ) ? (string)$serialValue : $db->encodeBlob( $serialValue );
+		return is_int( $serialValue ) ? "CAST('".$serialValue."' as bytes)" : $db->encodeBlob( $serialValue );
 	}
 
 	/**

@@ -398,7 +398,7 @@ class SpecialRecentChanges extends ChangesListSpecialPage {
 		if ( isset( $join_conds[$ctTableName] )
 			&& $this->isDenseTagFilter( $conds['ct_tag_id'] ?? [], $opts['limit'] )
 		) {
-			$join_conds[$ctTableName][0] = 'STRAIGHT_JOIN';
+			$join_conds[$ctTableName][0] = 'JOIN';
 		}
 
 		if ( in_array( 'DISTINCT', $query_options ) ) {

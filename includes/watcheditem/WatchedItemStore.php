@@ -1048,6 +1048,7 @@ class WatchedItemStore implements WatchedItemStoreInterface, StatsdAwareInterfac
 		$rows = [];
 		foreach ( $targets as $target ) {
 			$rows[] = [
+				'wl_id' => intval(microtime(true)),
 				'wl_user' => $user->getId(),
 				'wl_namespace' => $target->getNamespace(),
 				'wl_title' => $target->getDBkey(),

@@ -208,6 +208,8 @@ abstract class Database implements IDatabase, IMaintainableDatabase, LoggerAware
 	/** @var SQLPlatform */
 	protected $platform;
 
+	protected $latencyFile;
+
 	/**
 	 * @note exceptions for missing libraries/drivers should be thrown in initConnection()
 	 * @stable to call
@@ -273,6 +275,10 @@ abstract class Database implements IDatabase, IMaintainableDatabase, LoggerAware
 			$this->currentDomain,
 			$this->errorLogger
 		);
+		$this->latencyFile = fopen('latencies.csv', 'a');
+		if (!$this->latencyFile) {
+			throw new LogicException("Enable to open file to log latencies");
+		}
 	}
 
 	/**
@@ -1705,7 +1711,11 @@ abstract class Database implements IDatabase, IMaintainableDatabase, LoggerAware
 			? self::QUERY_CHANGE_ROWS
 			: self::QUERY_CHANGE_NONE;
 
-		return $this->query( $sql, $fname, $flags );
+		// $startTime = microtime(true);
+		$res = $this->query( $sql, $fname, $flags );
+		// $elapsedTime = strval((microtime(true) - $startTime) * 1000);
+		// fwrite($this->latencyFile, "SELECT, $elapsedTime\n");
+		return $res;
 	}
 
 	public function selectRow( $table, $vars, $conds, $fname = __METHOD__,
@@ -1832,14 +1842,20 @@ abstract class Database implements IDatabase, IMaintainableDatabase, LoggerAware
 		if ( !$sql ) {
 			return true;
 		}
+		// $startTime = microtime(true);
 		$this->query( $sql, $fname, self::QUERY_CHANGE_ROWS );
+		// $elapsedTime = strval((microtime(true) - $startTime) * 1000);
+		// fwrite($this->latencyFile, "INSERT, $elapsedTime\n");
 
 		return true;
 	}
 
 	public function update( $table, $set, $conds, $fname = __METHOD__, $options = [] ) {
 		$sql = $this->platform->updateSqlText( $table, $set, $conds, $options );
+		// $startTime = microtime(true);
 		$this->query( $sql, $fname, self::QUERY_CHANGE_ROWS );
+		// $elapsedTime = strval((microtime(true) - $startTime) * 1000);
+		// fwrite($this->latencyFile, "UPDATE, $elapsedTime\n");
 
 		return true;
 	}
@@ -1913,7 +1929,9 @@ abstract class Database implements IDatabase, IMaintainableDatabase, LoggerAware
 			return (string)(int)$s;
 		} elseif ( is_int( $s ) ) {
 			return (string)$s;
-		} else {
+		} elseif ( str_starts_with( $s, "FROM_BASE64" ) or str_starts_with( $s, "CAST(" )) {
+			return (string)$s;
+		}else {
 			return "'" . $this->strencode( $s ) . "'";
 		}
 	}
@@ -2090,7 +2108,10 @@ abstract class Database implements IDatabase, IMaintainableDatabase, LoggerAware
 
 	public function delete( $table, $conds, $fname = __METHOD__ ) {
 		$sql = $this->platform->deleteSqlText( $table, $conds );
+		// $startTime = microtime(true);
 		$this->query( $sql, $fname, self::QUERY_CHANGE_ROWS );
+		// $elapsedTime = strval((microtime(true) - $startTime) * 1000);
+		// fwrite($this->latencyFile, "DELETE, $elapsedTime\n");
 
 		return true;
 	}
@@ -2851,7 +2872,10 @@ abstract class Database implements IDatabase, IMaintainableDatabase, LoggerAware
 	 */
 	protected function doCommit( $fname ) {
 		if ( $this->trxLevel() ) {
+			// $startTime = microtime(true);
 			$this->query( 'COMMIT', $fname, self::QUERY_CHANGE_TRX );
+			// $elapsedTime = strval((microtime(true) - $startTime) * 1000);
+			// fwrite($this->latencyFile, "COMMIT, $elapsedTime\n");
 		}
 	}
 
@@ -3193,7 +3217,7 @@ abstract class Database implements IDatabase, IMaintainableDatabase, LoggerAware
 	 * @stable to override
 	 */
 	public function encodeBlob( $b ) {
-		return $b;
+		return "FROM_BASE64('" . base64_encode($b) . "')";
 	}
 
 	/**
